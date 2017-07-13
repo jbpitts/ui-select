@@ -204,7 +204,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
         scope.$apply(function() {
           var processed = false;
           // var tagged = false; //Checkme
-          if(KEY.isHorizontalMovement(key)){
+          if(!KEY.isControl(e) && KEY.isHorizontalMovement(key)){
             processed = _handleMatchSelection(key);
           }
           if (processed  && key != KEY.TAB) {
