@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.19.8 - 2017-07-13T13:12:56.444Z
+ * Version: 0.19.8 - 2017-07-21T21:09:34.470Z
  * License: MIT
  */
 
@@ -815,7 +815,7 @@ uis.controller('uiSelectCtrl',
           if (containerWidth === 0) {
             return false;
           }
-          var inputWidth = containerWidth - input.offsetLeft;
+            var inputWidth = containerWidth - input.offsetLeft - (ctrl.multiple ? 24 : 0);
           if (inputWidth < 50) inputWidth = containerWidth;
           ctrl.searchInput.css('width', inputWidth+'px');
           return true;
