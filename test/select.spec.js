@@ -15,6 +15,8 @@ describe('ui-select tests', function () {
     Escape: 27
   };
 
+  var defaultPlaceholder = 'Pick one...';
+
   function isNil(value) {
     return angular.isUndefined(value) || value === null;
   }
@@ -189,6 +191,10 @@ describe('ui-select tests', function () {
 
   function getMatchLabel(el) {
     return $(el).find('.ui-select-match > span:first > span[ng-transclude]:not(.ng-hide)').text();
+  }
+
+  function getMatchPlaceholder(el) {
+    return el.find('.ui-select-search').attr('placeholder')
   }
 
   function clickItem(el, text) {
@@ -736,6 +742,28 @@ describe('ui-select tests', function () {
     expect(isDropdownOpened(el1)).toEqual(false);
     expect(isDropdownOpened(el2)).toEqual(true);
 
+    el1.remove();
+    el2.remove();
+  });
+
+  it('should close an opened select clicking outside with stopPropagation()', function () {
+    var el1 = createUiSelect();
+    var el2 = $('<div></div>');
+    el1.appendTo(document.body);
+    el2.appendTo(document.body);
+
+    el2.on('click', function (e) {
+      e.stopPropagation()
+    });
+
+    expect(isDropdownOpened(el1)).toEqual(false);
+    clickMatch(el1);
+    expect(isDropdownOpened(el1)).toEqual(true);
+
+    // Using a native dom click() to make sure the test fails when it should.
+    el2[0].click();
+
+    expect(isDropdownOpened(el1)).toEqual(false);
     el1.remove();
     el2.remove();
   });
@@ -1874,7 +1902,9 @@ describe('ui-select tests', function () {
     function createUiSelectMultiple(attrs) {
       var attrsHtml = '',
         choicesAttrsHtml = '',
-        matchesAttrsHtml = '';
+        matchesAttrsHtml = '',
+        matchesPlaceholder = defaultPlaceholder;
+
       if (attrs !== undefined) {
         if (attrs.disabled !== undefined) { attrsHtml += ' ng-disabled="' + attrs.disabled + '"'; }
         if (attrs.required !== undefined) { attrsHtml += ' ng-required="' + attrs.required + '"'; }
@@ -1884,23 +1914,26 @@ describe('ui-select tests', function () {
         if (attrs.taggingTokens !== undefined) { attrsHtml += ' tagging-tokens="' + attrs.taggingTokens + '"'; }
         if (attrs.taggingLabel !== undefined) { attrsHtml += ' tagging-label="' + attrs.taggingLabel + '"'; }
         if (attrs.inputId !== undefined) { attrsHtml += ' input-id="' + attrs.inputId + '"'; }
-        if (attrs.groupBy !== undefined) { choicesAttrsHtml += ' group-by="' + attrs.groupBy + '"'; }
-        if (attrs.uiDisableChoice !== undefined) { choicesAttrsHtml += ' ui-disable-choice="' + attrs.uiDisableChoice + '"'; }
-        if (attrs.lockChoice !== undefined) { matchesAttrsHtml += ' ui-lock-choice="' + attrs.lockChoice + '"'; }
         if (attrs.removeSelected !== undefined) { attrsHtml += ' remove-selected="' + attrs.removeSelected + '"'; }
         if (attrs.resetSearchInput !== undefined) { attrsHtml += ' reset-search-input="' + attrs.resetSearchInput + '"'; }
         if (attrs.limit !== undefined) { attrsHtml += ' limit="' + attrs.limit + '"'; }
         if (attrs.onSelect !== undefined) { attrsHtml += ' on-select="' + attrs.onSelect + '"'; }
         if (attrs.removeSelected !== undefined) { attrsHtml += ' remove-selected="' + attrs.removeSelected + '"'; }
-        if (attrs.refresh !== undefined) { choicesAttrsHtml += ' refresh="' + attrs.refresh + '"'; }
-        if (attrs.refreshDelay !== undefined) { choicesAttrsHtml += ' refresh-delay="' + attrs.refreshDelay + '"'; }
         if (attrs.spinnerEnabled !== undefined) { attrsHtml += ' spinner-enabled="' + attrs.spinnerEnabled + '"'; }
         if (attrs.spinnerClass !== undefined) { attrsHtml += ' spinner-class="' + attrs.spinnerClass + '"'; }
+        if (attrs.groupBy !== undefined) { choicesAttrsHtml += ' group-by="' + attrs.groupBy + '"'; }
+        if (attrs.uiDisableChoice !== undefined) { choicesAttrsHtml += ' ui-disable-choice="' + attrs.uiDisableChoice + '"'; }
+        if (attrs.refresh !== undefined) { choicesAttrsHtml += ' refresh="' + attrs.refresh + '"'; }
+        if (attrs.refreshDelay !== undefined) { choicesAttrsHtml += ' refresh-delay="' + attrs.refreshDelay + '"'; }
+        if (attrs.lockChoice !== undefined) { matchesAttrsHtml += ' ui-lock-choice="' + attrs.lockChoice + '"'; }
+        if (attrs.uiSelectHeaderGroupSelectable !== undefined) { choicesAttrsHtml += ' ui-select-header-group-selectable="' + attrs.uiSelectHeaderGroupSelectable + '"'; }
       }
+
+      matchesAttrsHtml += ' placeholder="' +  matchesPlaceholder + '"';
 
       return compileTemplate(
         '<ui-select multiple ng-model="selection.selectedMultiple"' + attrsHtml + ' theme="bootstrap" style="width: 800px;"> \
-                <ui-select-match "' + matchesAttrsHtml + ' placeholder="Pick one...">{{$item.name}} &lt;{{$item.email}}&gt;</ui-select-match> \
+                <ui-select-match ' + matchesAttrsHtml + '>{{$item.name}} &lt;{{$item.email}}&gt;</ui-select-match> \
                 <ui-select-choices repeat="person in people | filter: $select.search"' + choicesAttrsHtml + '> \
                   <div ng-bind-html="person.name | highlight: $select.search"></div> \
                   <div ng-bind-html="person.email | highlight: $select.search"></div> \
@@ -2050,6 +2083,7 @@ describe('ui-select tests', function () {
       expect(containerWidth - newWidth).toBeLessThan(30);
 
     });
+
     it('should move to last match when pressing BACKSPACE key from search', function () {
 
       var el = createUiSelectMultiple();
@@ -2123,7 +2157,6 @@ describe('ui-select tests', function () {
       expect(el.scope().$selectMultiple.activeMatchIndex).toBe(scope.selection.selectedMultiple.length - 1);
 
     });
-
 
     it('should move to last match when pressing LEFT key from search', function () {
 
@@ -2971,6 +3004,65 @@ describe('ui-select tests', function () {
         triggerKeydown(searchInput, Key.Enter);
         expect(el.scope().$select.activeIndex).toBe(2);
       });
+
+      it('should not display the placeholder when tag is selected (by default)', function () {
+        var placeholderText = defaultPlaceholder;
+
+        var el = createUiSelectMultiple({
+          tagging: '',
+          taggingLabel: ''
+        });
+
+        var $select = el.scope().$select; // uiSelectCtrl
+
+        expect($select.selected).toEqual([]);
+        expect($select.getPlaceholder()).toEqual(placeholderText);
+        expect(getMatchPlaceholder(el)).toEqual(placeholderText); // get placeholder
+
+        clickItem(el, scope.people[0].name);
+        expect($select.selected).toEqual([scope.people[0]]);
+        expect(getMatchLabel(el)).toEqual(''); // empty text
+        expect(getMatchPlaceholder(el)).toEqual(''); // empty placeholder
+
+        clickItem(el, scope.people[1].name);
+        expect($select.selected).toEqual([scope.people[0], scope.people[1]]);
+        expect(getMatchLabel(el)).toEqual('');
+        expect(getMatchPlaceholder(el)).toEqual('');
+      });
+
+      // Could be needed when e.g. tag is shown below the input
+      it('should display the placeholder when tag is selected (if user overrides .getPlaceholder())', function () {
+        var placeholderText = defaultPlaceholder;
+
+        var el = createUiSelectMultiple({
+          tagging: '',
+          taggingLabel: ''
+        });
+        var $select = el.scope().$select;
+
+        /**
+         * In case user wants to show placeholder when the text is empty - they can override $select.getPlaceholder.
+         * Cannot do this with $selectMultiple, bc <ui-select-multiple is appended inside the library
+         * This override closes #1796
+         */
+        $select.getPlaceholder = function() {
+          return $select.placeholder;
+        };
+
+        expect($select.selected).toEqual([]);
+        expect(getMatchLabel(el)).toEqual('');
+        expect(getMatchPlaceholder(el)).toEqual(placeholderText);
+
+        clickItem(el, scope.people[0].name);
+        expect($select.selected).toEqual([scope.people[0]]);
+        expect(getMatchLabel(el)).toEqual(''); // empty text
+        expect(getMatchPlaceholder(el)).toEqual(placeholderText); // show placeholder
+
+        clickItem(el, scope.people[1].name);
+        expect($select.selected).toEqual([scope.people[0], scope.people[1]]);
+        expect(getMatchLabel(el)).toEqual('');
+        expect(getMatchPlaceholder(el)).toEqual(placeholderText);
+      });
     });
 
     describe('resetSearchInput option multiple', function () {
@@ -3066,6 +3158,37 @@ describe('ui-select tests', function () {
         var spinner = el.find('.ui-select-refreshing');
         setSearchText(el, 'a');
         expect(el.scope().$select.spinnerClass).toBe('randomclass');
+      });
+    });
+
+    describe('uiSelectHeaderGroupSelectable directive', function () {
+      it('should have a default value of false', function () {
+        var el = createUiSelectMultiple({ groupBy: "'age'", uiSelectHeaderGroupSelectable: true });
+        var ctrl = el.scope().$select;
+
+        showChoicesForSearch(el, '');
+        expect(ctrl.multiple).toEqual(true);
+        expect(ctrl.groups.length).toEqual(5);
+        openDropdown(el);
+
+        $(el).find('div.ui-select-header-group-selectable').first().click();
+        showChoicesForSearch(el, '');
+        expect(ctrl.selected.length).toEqual(2);
+      });
+
+      it('should don\'t work with false attribute', function () {
+        var el = createUiSelectMultiple({ groupBy: "'age'", uiSelectHeaderGroupSelectable: false });
+        var ctrl = el.scope().$select;
+
+        showChoicesForSearch(el, '');
+        expect(ctrl.multiple).toEqual(true);
+        expect(ctrl.groups.length).toEqual(5);
+        openDropdown(el);
+
+        $(el).find('div.ui-select-header-group-selectable').first().click();
+        showChoicesForSearch(el, '');
+
+        expect(ctrl.selected.length).toEqual(0);
       });
     });
   });
@@ -3456,6 +3579,54 @@ describe('ui-select tests', function () {
       triggerKeydown(searchInput, Key.Down);
       triggerKeydown(searchInput, Key.Enter);
       expect(el.scope().$select.activeIndex).toBe(2);
+    });
+  });
+
+  describe('Header & Footer', function () {
+
+    var el;
+
+    function setupSelectComponent(theme, isMulti) {
+      isMulti = !!isMulti;
+      var multi = isMulti ? ' multiple' : '';
+      var selectedStr = isMulti ? '$select.selected[0]' : '$select.selected';
+      scope.selection.selected = isMulti ? [scope.people[0]] : scope.people[0];
+
+      el = compileTemplate(
+        '<ui-select ng-model="selection.selected" theme="' + theme + '"' + multi + '> \
+          <ui-select-match placeholder="Pick one...">{{$select.selected.name}}</ui-select-match> \
+          <ui-select-header>{{' + selectedStr + '.name}}</ui-select-header>\
+          <ui-select-choices repeat="person in people | filter: $select.search"> \
+            <div ng-bind-html="person.name | highlight: $select.search"></div> \
+            <div ng-bind-html="person.email | highlight: $select.search"></div> \
+          </ui-select-choices> \
+          <ui-select-footer>{{' + selectedStr + '.name}}</ui-select-footer> \
+        </ui-select>'
+      );
+    }
+
+    ['selectize', 'bootstrap', 'select2'].forEach(function (theme) {
+      describe(theme + ' theme', function () {
+        it('should show the header', function () {
+          setupSelectComponent(theme);
+          expect($(el).find('.ui-select-header').text().trim()).toBe(scope.selection.selected.name);
+        });
+
+        it('should show the header in multiple option', function () {
+          setupSelectComponent(theme, true);
+          expect($(el).find('.ui-select-header').text().trim()).toBe(scope.selection.selected[0].name);
+        });
+
+        it('should show the footer', function () {
+          setupSelectComponent(theme);
+          expect($(el).find('.ui-select-footer').text().trim()).toBe(scope.selection.selected.name);
+        });
+
+        it('should show the footer in multiple option', function () {
+          setupSelectComponent(theme, true);
+          expect($(el).find('.ui-select-footer').text().trim()).toBe(scope.selection.selected[0].name);
+        });
+      });
     });
   });
 });
