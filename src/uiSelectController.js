@@ -534,6 +534,7 @@ uis.controller('uiSelectCtrl',
 
   var sizeWatch = null;
   var updaterScheduled = false;
+  var searchWidth;
   ctrl.sizeSearchInput = function() {
 
     var input = ctrl.searchInput[0],
@@ -551,13 +552,19 @@ uis.controller('uiSelectCtrl',
             }
             var inputWidth = containerWidth - input.offsetLeft;
             if (inputWidth < 50) {
-                inputWidth = containerWidth;
+                inputWidth = containerWidth - 3; //take some buffer off it
             }
-            ctrl.searchInput.css('width', inputWidth+'px');
+            if (inputWidth !== searchWidth) {
+                searchWidth = inputWidth;
+                ctrl.searchInput.css('width', inputWidth + 'px');
+            }
             return true;
         };
 
-    ctrl.searchInput.css('width', '10px');
+    if (!searchWidth) {
+        searchWidth = 10;
+        ctrl.searchInput.css('width', '10px');
+    }
     $timeout(function() { //Give tags time to render correctly
       if (sizeWatch === null && !updateIfVisible(calculateContainerWidth())) {
         sizeWatch = $scope.$watch(function() {
