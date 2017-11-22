@@ -550,14 +550,16 @@ uis.controller('uiSelectCtrl',
                 return false;
             }
             var inputWidth = containerWidth - input.offsetLeft;
-            if (inputWidth < 50) {
-                inputWidth = containerWidth - 3; //take some buffer off it
+            if (inputWidth < 50 || (ctrl.multiple && input.offsetLeft < 20)) {
+                // inputWidth = containerWidth - 3; //take some buffer off it
+                ctrl.searchInput.css('width', ''); //remove width
+            } else {
+                ctrl.searchInput.css('width', inputWidth + 'px');
             }
-            ctrl.searchInput.css('width', inputWidth + 'px');
             return true;
         };
 
-    ctrl.searchInput.css('width', '10px'); // needs to reset to get sizing correct, not sure why
+    ctrl.searchInput.css('width', '50px'); // needs to reset to get sizing correct, not sure why
     $timeout(function() { //Give tags time to render correctly
       if (sizeWatch === null && !updateIfVisible(calculateContainerWidth())) {
         sizeWatch = $scope.$watch(function() {
