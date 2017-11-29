@@ -542,7 +542,8 @@ uis.controller('uiSelectCtrl',
             // Return the container width only if the search input is visible
             var eleStyle = $window.getComputedStyle(container);
             var padding = parseFloat(eleStyle.paddingLeft) + parseFloat(eleStyle.paddingRight);
-            var width = container.clientWidth - padding;
+            var margin = parseFloat(eleStyle.marginLeft) + parseFloat(eleStyle.marginRight);
+            var width = container.clientWidth - padding - margin;
             return width * !!input.offsetParent;
         },
         updateIfVisible = function(containerWidth) {

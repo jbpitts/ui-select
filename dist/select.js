@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.19.8 - 2017-11-22T17:30:36.626Z
+ * Version: 0.19.8 - 2017-11-29T19:34:58.997Z
  * License: MIT
  */
 
@@ -819,7 +819,8 @@ uis.controller('uiSelectCtrl',
             // Return the container width only if the search input is visible
             var eleStyle = $window.getComputedStyle(container);
             var padding = parseFloat(eleStyle.paddingLeft) + parseFloat(eleStyle.paddingRight);
-            var width = container.clientWidth - padding;
+            var margin = parseFloat(eleStyle.marginLeft) + parseFloat(eleStyle.marginRight);
+            var width = container.clientWidth - padding - margin;
             return width * !!input.offsetParent;
         },
         updateIfVisible = function(containerWidth) {
